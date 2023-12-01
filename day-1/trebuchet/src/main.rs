@@ -15,41 +15,44 @@ fn main() {
         ("nine", '9'),
     ]);
 
-    let splitted = data.trim().split("\n").collect::<Vec<_>>();
+    let total = data
+        .trim()
+        .split("\n")
+        .into_iter()
+        .map(|i| {
+            let mut sum: Vec<char> = vec![];
 
-    let mut total = 0;
+            let mut matches: Vec<(usize, char)> = vec![];
 
-    for i in splitted {
-        let mut sum: Vec<char> = vec![];
-
-        let mut matches: Vec<(usize, char)> = vec![];
-
-        for number in numbers_to_strings.keys() {
-            if let Some(index) = i.find(number) {
-                matches.push((index, numbers_to_strings.get(number).unwrap().to_owned()));
+            for number in numbers_to_strings.keys() {
+                if let Some(index) = i.find(number) {
+                    matches.push((index, numbers_to_strings.get(number).unwrap().to_owned()));
+                }
             }
-        }
 
-        let numbers: Vec<(usize, char)> = i
-            .chars()
-            .enumerate()
-            .filter(|(index, x)| x.is_numeric())
-            .map(|(x, c)| (x, c))
-            .collect();
+            let numbers: Vec<(usize, char)> = i
+                .chars()
+                .enumerate()
+                .filter(|(index, x)| x.is_numeric())
+                .map(|(x, c)| (x, c))
+                .collect();
 
-        matches.extend(numbers);
+            matches.extend(numbers);
 
-        matches.sort();
+            matches.sort();
 
-        if let Some(&first) = matches.first() {
-            sum.push(first.1);
-        }
+            if let Some(&first) = matches.first() {
+                sum.push(first.1);
+            }
 
-        if let Some(&last) = matches.last() {
-            sum.push(last.1);
-        }
+            if let Some(&last) = matches.last() {
+                sum.push(last.1);
+            }
+            println!("{:?}", sum);
+            sum.iter().collect::<String>().parse::<i32>().unwrap_or(0)
+            //total += sum.iter().collect::<String>().parse::<i32>().unwrap_or(0);
+        })
+        .fold(0, |total, x| total + x);
 
-        total += sum.iter().collect::<String>().parse::<i32>().unwrap_or(0);
-    }
     println!("Total: {:?}", total);
 }
