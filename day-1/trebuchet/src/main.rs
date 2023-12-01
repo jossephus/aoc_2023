@@ -19,14 +19,23 @@ fn main() {
         .trim()
         .split("\n")
         .into_iter()
-        .map(|i| {
+        .enumerate()
+        .map(|(index, mut i)| {
             let mut sum: Vec<char> = vec![];
 
             let mut matches: Vec<(usize, char)> = vec![];
 
             for number in numbers_to_strings.keys() {
-                if let Some(index) = i.find(number) {
-                    matches.push((index, numbers_to_strings.get(number).unwrap().to_owned()));
+                let mut j = i.to_string();
+                while let Some(index) = j.find(number) {
+                    matches.push((
+                        j.find(number).unwrap(),
+                        numbers_to_strings.get(number).unwrap().to_owned(),
+                    ));
+                    j.replace_range(
+                        index..index + number.len(),
+                        " ".repeat(number.len()).as_str(),
+                    );
                 }
             }
 
@@ -48,9 +57,7 @@ fn main() {
             if let Some(&last) = matches.last() {
                 sum.push(last.1);
             }
-            println!("{:?}", sum);
             sum.iter().collect::<String>().parse::<i32>().unwrap_or(0)
-            //total += sum.iter().collect::<String>().parse::<i32>().unwrap_or(0);
         })
         .fold(0, |total, x| total + x);
 
