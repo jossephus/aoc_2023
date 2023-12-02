@@ -25,7 +25,7 @@ fn main() {
 
             let mut matches: Vec<(usize, char)> = vec![];
 
-            for number in numbers_to_strings.keys() {
+            numbers_to_strings.keys().for_each(|number| {
                 let mut j = i.to_string();
                 while let Some(index) = j.find(number) {
                     matches.push((
@@ -37,7 +37,7 @@ fn main() {
                         " ".repeat(number.len()).as_str(),
                     );
                 }
-            }
+            });
 
             let numbers: Vec<(usize, char)> = i
                 .chars()
