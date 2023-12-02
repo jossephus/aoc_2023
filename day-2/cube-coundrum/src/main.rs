@@ -4,9 +4,9 @@ use anyhow::{anyhow, Result};
 
 #[derive(Debug, PartialEq, PartialOrd, Clone)]
 enum Color {
-    Red(i32),
-    Blue(i32),
-    Green(i32),
+    Red { amount: i32 },
+    Blue { amount: i32 },
+    Green { amount: i32 },
 }
 
 impl FromStr for Color {
@@ -14,19 +14,20 @@ impl FromStr for Color {
 
     fn from_str(s: &str) -> Result<Self> {
         if let Some(index) = s.find("green") {
-            return Ok(Color::Green(
-                s.split_at(index).0.trim().parse::<i32>().unwrap(),
-            ));
+            return Ok(Color::Green {
+                amount: s.split_at(index).0.trim().parse::<i32>().unwrap(),
+            });
         } else if let Some(index) = s.find("blue") {
-            return Ok(Color::Blue(
-                s.split_at(index).0.trim().parse::<i32>().unwrap(),
-            ));
+            return Ok(Color::Blue {
+                amount: s.split_at(index).0.trim().parse::<i32>().unwrap(),
+            });
         } else if let Some(index) = s.find("red") {
-            return Ok(Color::Red(
-                s.split_at(index).0.trim().parse::<i32>().unwrap(),
-            ));
+            return Ok(Color::Red {
+                amount: s.split_at(index).0.trim().parse::<i32>().unwrap(),
+            });
         }
-        return Ok(Color::Green(3));
+
+        return Err(anyhow!("Can not parse this color"));
     }
 }
 
@@ -40,9 +41,9 @@ struct Set {
 impl Default for Set {
     fn default() -> Self {
         Self {
-            green: Color::Green(0),
-            blue: Color::Blue(0),
-            red: Color::Red(0),
+            green: Color::Green { amount: 0 },
+            blue: Color::Blue { amount: 0 },
+            red: Color::Red { amount: 0 },
         }
     }
 }
@@ -56,9 +57,9 @@ impl FromStr for Set {
         s.split(",")
             .map(|s| s.parse::<Color>().unwrap())
             .for_each(|x| match x {
-                Color::Red(n) => set.red = Color::Red(n),
-                Color::Blue(n) => set.blue = Color::Blue(n),
-                Color::Green(n) => set.green = Color::Green(n),
+                Color::Red { amount } => set.red = Color::Red { amount },
+                Color::Blue { amount } => set.blue = Color::Blue { amount },
+                Color::Green { amount } => set.green = Color::Green { amount },
             });
 
         Ok(set)
@@ -115,13 +116,20 @@ fn parse_program_part_1(line: &str, r: i32, b: i32, g: i32) -> Result<i32> {
     cube.sets.into_iter().for_each(|x| {
         match x {
             Set { green, red, blue } => {
-                if green > Color::Green(g) {
-                    error_msg = "Somehting Green";
-                } else if red > Color::Red(r) {
-                    error_msg = "Somehting Red";
-                } else if blue > Color::Blue(b) {
-                    error_msg = "Somehting Blue";
-                }
+                match green {
+                    Color::Green { amount } => error_msg = "something wrong",
+                    _ => {}
+                };
+
+                match red {
+                    Color::Red { amount } => error_msg = "something wrong",
+                    _ => {}
+                };
+
+                match blue {
+                    Color::Blue { amount } => error_msg = "something wrong",
+                    _ => {}
+                };
             }
         };
     });
@@ -134,8 +142,6 @@ fn parse_program_part_1(line: &str, r: i32, b: i32, g: i32) -> Result<i32> {
 }
 fn parse_program_part_2(line: &str, r: i32, b: i32, g: i32) -> i32 {
     let cube = line.parse::<Cube>().unwrap();
-
-    let mut error_msg = "";
 
     let max_red = cube
         .clone()
@@ -160,50 +166,51 @@ fn parse_program_part_2(line: &str, r: i32, b: i32, g: i32) -> i32 {
         .unwrap()
         .green;
 
-    let mut product = 1;
-
-    if let Color::Red(x) = max_red {
-        product *= x;
-    }
-    if let Color::Blue(x) = max_blue {
-        product *= x;
-    }
-    if let Color::Green(x) = max_green {
-        product *= x;
-    }
-
-    product
+    vec![max_red, max_blue, max_green]
+        .iter()
+        .map(|x| match x {
+            Color::Red { amount } => amount,
+            Color::Blue { amount } => amount,
+            Color::Green { amount } => amount,
+        })
+        .fold(1, |acc, e| acc * e)
 }
 
 #[cfg(test)]
 mod test {
     use crate::*;
-    //#[test]
-    //fn parse_color() {
-    //assert_eq!("3 green".parse::<Color>().unwrap(), Color::Green(3));
-    //assert_eq!("2 blue".parse::<Color>().unwrap(), Color::Blue(2));
-    //assert_eq!("2 red".parse::<Color>().unwrap(), Color::Red(2));
-    //}
+    #[test]
+    fn parse_color() {
+        assert_eq!(
+            "3 green".parse::<Color>().unwrap(),
+            Color::Green { amount: 3 }
+        );
+        assert_eq!(
+            "2 blue".parse::<Color>().unwrap(),
+            Color::Blue { amount: 2 }
+        );
+        assert_eq!("2 red".parse::<Color>().unwrap(), Color::Red { amount: 2 });
+    }
 
-    //#[test]
-    //fn parse_sets() {
-    //assert_eq!(
-    //"4 blue, 3 green, 2 red".parse::<Set>().unwrap(),
-    //Set {
-    //green: Color::Green(3),
-    //red: Color::Red(2),
-    //blue: Color::Blue(4),
-    //}
-    //);
-    //assert_eq!(
-    //"4 blue".parse::<Set>().unwrap(),
-    //Set {
-    //green: Color::Green(0),
-    //red: Color::Red(0),
-    //blue: Color::Blue(4),
-    //}
-    //);
-    //}
+    #[test]
+    fn parse_sets() {
+        assert_eq!(
+            "4 blue, 3 green, 2 red".parse::<Set>().unwrap(),
+            Set {
+                green: Color::Green { amount: 3 },
+                red: Color::Red { amount: 2 },
+                blue: Color::Blue { amount: 4 },
+            }
+        );
+        assert_eq!(
+            "4 blue".parse::<Set>().unwrap(),
+            Set {
+                green: Color::Green { amount: 0 },
+                red: Color::Red { amount: 0 },
+                blue: Color::Blue { amount: 4 },
+            }
+        );
+    }
 
     #[test]
     fn draw() {
@@ -215,14 +222,14 @@ mod test {
                 id: 1,
                 sets: vec![
                     Set {
-                        blue: Color::Blue(3),
-                        red: Color::Red(2),
-                        green: Color::Green(0)
+                        blue: Color::Blue { amount: 3 },
+                        red: Color::Red { amount: 2 },
+                        green: Color::Green { amount: 0 }
                     },
                     Set {
-                        blue: Color::Blue(2),
-                        red: Color::Red(0),
-                        green: Color::Green(3),
+                        blue: Color::Blue { amount: 2 },
+                        red: Color::Red { amount: 0 },
+                        green: Color::Green { amount: 3 },
                     }
                 ]
             }
