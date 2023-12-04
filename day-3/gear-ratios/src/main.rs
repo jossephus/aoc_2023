@@ -1,4 +1,8 @@
-use std::{collections::HashMap, fs, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    str::FromStr,
+};
 
 use anyhow::Result;
 use lazy_static::lazy_static;
@@ -21,7 +25,7 @@ struct Symbol<'a> {
 
 lazy_static! {
     static ref NUMBERS_REGEX: Regex = Regex::new(r"(\d+)").unwrap();
-    static ref SYMBOLS_REGEX: Regex = Regex::new(r"[^\d+\.\n]+").unwrap();
+    static ref SYMBOLS_REGEX: Regex = Regex::new(r"[^\d\.\n]+").unwrap();
 }
 
 fn main() {
@@ -39,10 +43,10 @@ fn main() {
         })
         .collect::<Vec<_>>();
 
-    //let all_symboles = SYMBOLS_REGEX
-    //.find_iter(data.as_str())
-    //.map(|x| x.as_str().chars().next().unwrap())
-    //.collect::<Vec<_>>();
+    let all_symboles = SYMBOLS_REGEX
+        .find_iter(data.as_str())
+        .map(|x| x.as_str().chars().next().unwrap())
+        .collect::<HashSet<_>>();
 
     //.map(|x| Symbol {
     //content: x.as_str(),
@@ -111,7 +115,7 @@ fn main() {
             };
 
             let diagonal_top_start = if number.index != 0 {
-                data.chars().nth(number.start - (line_length + 1)).unwrap()
+                data.chars().nth(number.start - line_length - 2).unwrap()
             } else {
                 '.'
             };
@@ -131,11 +135,11 @@ fn main() {
                 bottom_start,
             ]
             .iter()
-            .any(|x| symbols.contains(x));
+            .any(|x| all_symboles.contains(x));
 
             if valid {
                 let value = number.content.parse::<i32>().unwrap().to_owned();
-                dbg!(number.content);
+                println!("{}", number.content);
                 value
             } else {
                 0
@@ -215,5 +219,5 @@ fn main() {
     //.sum();
 
     //print!("{:?}", sum);
-    //println!("{:?}", all_symboles);
+    println!("{:?}", all_symboles);
 }
