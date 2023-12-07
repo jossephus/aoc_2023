@@ -1,6 +1,9 @@
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{collections::HashSet, fs};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+};
 
 lazy_static! {
     static ref NUMBERS_REGEX: Regex = Regex::new(r"(\d+)").unwrap();
@@ -9,13 +12,15 @@ lazy_static! {
 #[derive(Debug)]
 struct Card {
     id: usize,
-    from: usize,
+    matching_numbers: usize,
 }
 
 fn main() {
     let data = fs::read_to_string("data/data.txt").unwrap();
 
-    let abc = data
+    let mut id_to_matching_numbers: HashMap<_, _> = HashMap::new();
+
+    let mut cards = data
         .lines()
         .map(|line| {
             let (card_name, remaining) = line.split_once(":").unwrap();
@@ -42,38 +47,61 @@ fn main() {
             (init_length - final_length) as u32
         })
         .enumerate()
-        .fold(vec![], |mut acc, (index, value)| {
-            acc.push(Card {
+        .map(|(index, matching_numbers)| {
+            id_to_matching_numbers.insert(index + 1, matching_numbers as usize);
+            Card {
+                matching_numbers: matching_numbers as usize,
                 id: index + 1,
-                from: index + 1,
-            });
-
-            let mut v = value;
-            while v != 0 {
-                acc.push(Card {
-                    id: (v as usize + index + 1) as usize,
-                    from: index + 1,
-                });
-                v = v - 1;
             }
+        })
+        .collect::<Vec<_>>();
 
-            //let abc = acc.get(..).unwrap();
+    for card in &cards {
+        let mut j = card.id + 1;
 
-            //abc.iter().filter(|&&x| x.id == index + 1).for_each(|x| {
-            //let mut v = value;
-            //while v != 0 {
-            //acc.push(Card {
-            //id: (v as usize + index + 1) as usize,
-            //from: index + 1,
-            //});
-            //v = v - 1;
-            //}
-            //});
+        while j <= card.id + card.matching_numbers {
+            let other_card = Card {
+                id: j,
+                matching_numbers: *id_to_matching_numbers.get(&j).unwrap(),
+            };
+            cards.push(other_card);
+            j = j + 1;
+        }
+    }
 
-            acc
-        });
+    println!("{:?}", cards);
+    //.fold(vec![], |mut acc, (index, value)| {
+    //acc.push(Card {
+    //id: index + 1,
+    //from: index + 1,
+    //});
 
-    dbg!(abc.iter().filter(|x| x.id == 2).count());
+    //let mut v = value;
+    //while v != 0 {
+    //acc.push(Card {
+    //id: (v as usize + index + 1) as usize,
+    //from: index + 1,
+    //});
+    //v = v - 1;
+    //}
+
+    ////let abc = acc.get(..).unwrap();
+
+    ////abc.iter().filter(|&&x| x.id == index + 1).for_each(|x| {
+    ////let mut v = value;
+    ////while v != 0 {
+    ////acc.push(Card {
+    ////id: (v as usize + index + 1) as usize,
+    ////from: index + 1,
+    ////});
+    ////v = v - 1;
+    ////}
+    ////});
+
+    //acc
+    //});
+
+    //dbg!(abc.iter().filter(|x| x.id == 2).count());
     //println!("{:?}", abc);
 }
 
